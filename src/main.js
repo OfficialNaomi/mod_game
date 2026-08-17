@@ -1,23 +1,5 @@
-// ---------- Level Definitions ----------
-const levels = [
-  {
-    id: 1,
-    name: "Mod 1",
-    modulus: 1,
-    operation: "simple",
-    description: "Everything is 0",
-    requiredCorrect: 3,
-  },
-  {
-    id: 2,
-    name: "Mod 2 Addition",
-    modulus: 2,
-    operation: "addition",
-    description: "Parity, odd/even",
-    requiredCorrect: 3,
-  },
-  // We'll add more later
-];
+// ---------- Global Levels (from levels.js) ----------
+const levels = LEVELS;
 
 // ---------- Game State ----------
 let currentLevelIndex = 0;
@@ -34,7 +16,7 @@ const nextLevelBtn = document.getElementById("next-level-btn");
 const freefallBtn = document.getElementById("freefall-btn");
 
 // Staircase rotation settings
-const stepAngle = 360 / levels.length; // angle between steps
+const stepAngle = 360 / levels.length;
 let currentRotation = 0;
 
 // ---------- Staircase Rendering ----------
@@ -62,7 +44,7 @@ function renderStaircase() {
     staircaseEl.appendChild(step);
   });
 
-  // Rotate the whole staircase so the current level is at the front (bottom)
+  // Rotate the whole staircase so the current level is at the front
   currentRotation = -currentLevelIndex * stepAngle;
   staircaseEl.style.transform = `rotate(${currentRotation}deg)`;
 }
@@ -80,9 +62,14 @@ function loadLevel() {
   updateLevelInfo();
   generateQuestion();
 
-  // Update Free Fall button state
-  freefallBtn.disabled = currentLevelIndex < 9; // unlock after level 10 (index 9)
-  freefallBtn.title = currentLevelIndex < 9 ? "Unlocks after level 10" : "Start Free Fall";
+  // Free Fall unlocks when any unlocked level has unlocksFreeFall = true
+  const freefallUnlocked = levels.some(
+    (level, index) => index <= unlockedLevelIndex && level.unlocksFreeFall
+  );
+  freefallBtn.disabled = !freefallUnlocked;
+  freefallBtn.title = freefallUnlocked
+    ? "Start Free Fall"
+    : "Unlocks after completing Mod 10";
 }
 
 function completeLevel() {
@@ -106,22 +93,27 @@ function generateQuestion() {
   const level = levels[currentLevelIndex];
   let question, correctAnswer, options;
 
-  if (level.operation === "simple") {
-    const randomNumber = Math.floor(Math.random() * 20) + 1;
-    question = `${randomNumber} mod ${level.modulus} = ?`;
-    correctAnswer = randomNumber % level.modulus; // always 0
-    options = [0, 1, 2];
-  } else if (level.operation === "addition") {
-    // Temporary simple mod 2 addition
-    const a = Math.floor(Math.random() * 2);
-    const b = Math.floor(Math.random() * 2);
-    question = `${a} + ${b} mod 2 = ?`;
-    correctAnswer = (a + b) % 2;
-    options = [0, 1];
-  } else {
-    question = "Not implemented yet.";
-    correctAnswer = 0;
-    options = [0];
+  switch (level.operation) {
+    case "simple":
+      ({ question, correctAnswer, options } = generateSimpleQuestion(level));
+      break;
+    case "addition":
+      ({ question, correctAnswer, options } = generateAdditionQuestion(level));
+      break;
+    case "multiplication":
+      ({ question, correctAnswer, options } = generateMultiplicationQuestion(level));
+      break;
+    case "mixed":
+      if (Math.random() < 0.5) {
+        ({ question, correctAnswer, options } = generateAdditionQuestion(level));
+      } else {
+        ({ question, correctAnswer, options } = generateMultiplicationQuestion(level));
+      }
+      break;
+    default:
+      question = "Not implemented yet.";
+      correctAnswer = 0;
+      options = [0];
   }
 
   // Shuffle options
@@ -138,6 +130,55 @@ function generateQuestion() {
   });
 }
 
+function generateSimpleQuestion(level) {
+  // For mod 1, we want a few extra options to make it less trivial
+  const maxRandom = level.modulus === 1 ? 20 : 30;
+  const randomNumber = Math.floor(Math.random() * maxRandom) + 1;
+  const correctAnswer = randomNumber % level.modulus;
+
+  let options;
+  if (level.modulus === 1) {
+    options = [0, 1, 2];
+  } else {
+    options = [];
+    for (let i = 0; i < level.modulus; i++) {
+      options.push(i);
+    }
+  }
+
+  const question = `${randomNumber} mod ${level.modulus} = ?`;
+  return { question, correctAnswer, options };
+}
+
+function generateAdditionQuestion(level) {
+  const a = Math.floor(Math.random() * level.modulus);
+  const b = Math.floor(Math.random() * level.modulus);
+  const correctAnswer = (a + b) % level.modulus;
+
+  const options = [];
+  for (let i = 0; i < level.modulus; i++) {
+    options.push(i);
+  }
+
+  const question = `${a} + ${b} mod ${level.modulus} = ?`;
+  return { question, correctAnswer, options };
+}
+
+function generateMultiplicationQuestion(level) {
+  const a = Math.floor(Math.random() * level.modulus);
+  const b = Math.floor(Math.random() * level.modulus);
+  const correctAnswer = (a * b) % level.modulus;
+
+  const options = [];
+  for (let i = 0; i < level.modulus; i++) {
+    options.push(i);
+  }
+
+  const question = `${a} × ${b} mod ${level.modulus} = ?`;
+  return { question, correctAnswer, options };
+}
+
+// ---------- Answer Checking ----------
 function checkAnswer(selected, correct) {
   if (selected === correct) {
     feedbackEl.textContent = "Correct!";
@@ -159,7 +200,6 @@ function checkAnswer(selected, correct) {
 // ---------- Event Listeners ----------
 nextLevelBtn.addEventListener("click", goToNextLevel);
 
-// Placeholder for Free Fall
 freefallBtn.addEventListener("click", () => {
   if (!freefallBtn.disabled) {
     alert("Free Fall mode will be implemented soon!");
