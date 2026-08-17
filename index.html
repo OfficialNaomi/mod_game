@@ -14,7 +14,6 @@
     </header>
 
     <main id="game-area">
-      <!-- The staircase rotates around this central panel -->
       <div id="staircase-container">
         <div id="staircase"></div>
         <div id="question-panel">
@@ -22,14 +21,16 @@
           <p id="question-text">Loading...</p>
           <div id="answer-options"></div>
           <div id="feedback"></div>
-          <button id="next-level-btn" style="display: none;">Next Level</button>
-          <button id="freefall-btn" disabled title="Unlocks after level 10">Jump to Free Fall</button>
+          <div id="button-row">
+            <button id="up-btn" disabled>⬆ Up One Step</button>
+            <button id="freefall-btn" disabled title="Unlocks after Mod 10">Jump to Free Fall</button>
+          </div>
         </div>
       </div>
     </main>
 
     <footer>
-      <p>Free Fall unlocks after level 10.</p>
+      <p>Free Fall unlocks after Mod 10.</p>
     </footer>
   </div>
 
