@@ -69,9 +69,8 @@ createFlight(3, 15, (i) => ({
   range: mod3Operations[i].includes("Chain") ? [0, 5] : [0, 3],
 }));
 
-// ---------- Helper to create standard 15-step flights for mods 4-10 ----------
+// ---------- Helper to create standard 15-step flights ----------
 function createStandardFlight(modulus) {
-  const modNum = modulus;
   const operations = [
     "simple", "addition", "additionChain", "multiplication", "multiplicationChain",
     "mixed", "mixedChain", "simple", "addition", "additionChain",
@@ -83,7 +82,7 @@ function createStandardFlight(modulus) {
     "Multiplication 2", "Multiplication Chain 2", "Mixed 2", "Mixed Chain 2", "Simple 3"
   ];
 
-  createFlight(modNum, 15, (i) => ({
+  createFlight(modulus, 15, (i) => ({
     operation: operations[i],
     label: labels[i],
     description: labels[i],
@@ -95,3 +94,33 @@ function createStandardFlight(modulus) {
 for (let m = 4; m <= 10; m++) {
   createStandardFlight(m);
 }
+
+// ---------- Mods 11-60: 15 steps each ----------
+for (let m = 11; m <= 60; m++) {
+  createStandardFlight(m);
+}
+
+// ---------- Bonus flights: 10 steps each ----------
+function createBonusFlight(modulus) {
+  const operations = [
+    "simple", "addition", "multiplication", "mixed", "simple",
+    "additionChain", "multiplicationChain", "mixedChain", "addition", "multiplication"
+  ];
+  const labels = [
+    "Simple 1", "Addition", "Multiplication", "Mixed 1", "Simple 2",
+    "Addition Chain", "Multiplication Chain", "Mixed Chain", "Addition 2", "Multiplication 2"
+  ];
+
+  createFlight(modulus, 10, (i) => ({
+    operation: operations[i],
+    label: labels[i],
+    description: labels[i],
+    range: operations[i].includes("Chain") ? [0, 10] : [0, 8],
+  }));
+}
+
+createBonusFlight(100);
+createBonusFlight(360);
+createBonusFlight(365);
+createBonusFlight(1000);
+createBonusFlight(1024);
