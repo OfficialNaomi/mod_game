@@ -69,4 +69,29 @@ createFlight(3, 15, (i) => ({
   range: mod3Operations[i].includes("Chain") ? [0, 5] : [0, 3],
 }));
 
-// Add more flights later (Mod 4, 5, ...)
+// ---------- Helper to create standard 15-step flights for mods 4-10 ----------
+function createStandardFlight(modulus) {
+  const modNum = modulus;
+  const operations = [
+    "simple", "addition", "additionChain", "multiplication", "multiplicationChain",
+    "mixed", "mixedChain", "simple", "addition", "additionChain",
+    "multiplication", "multiplicationChain", "mixed", "mixedChain", "simple"
+  ];
+  const labels = [
+    "Simple 1", "Addition 1", "Addition Chain 1", "Multiplication 1", "Multiplication Chain 1",
+    "Mixed 1", "Mixed Chain 1", "Simple 2", "Addition 2", "Addition Chain 2",
+    "Multiplication 2", "Multiplication Chain 2", "Mixed 2", "Mixed Chain 2", "Simple 3"
+  ];
+
+  createFlight(modNum, 15, (i) => ({
+    operation: operations[i],
+    label: labels[i],
+    description: labels[i],
+    range: operations[i].includes("Chain") ? [0, 8] : [0, 5],
+  }));
+}
+
+// ---------- Mods 4-10: 15 steps each ----------
+for (let m = 4; m <= 10; m++) {
+  createStandardFlight(m);
+}
