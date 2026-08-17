@@ -1,12 +1,9 @@
-// ---------- Global Levels (from levels.js) ----------
 const levels = LEVELS;
 
-// ---------- Game State ----------
 let currentLevelIndex = 0;
 let unlockedLevelIndex = 0;
 let correctAnswersInLevel = 0;
 
-// ---------- DOM Elements ----------
 const staircaseEl = document.getElementById("staircase");
 const levelInfoEl = document.getElementById("level-info");
 const questionTextEl = document.getElementById("question-text");
@@ -15,11 +12,10 @@ const feedbackEl = document.getElementById("feedback");
 const nextLevelBtn = document.getElementById("next-level-btn");
 const freefallBtn = document.getElementById("freefall-btn");
 
-// Staircase rotation settings
-const stepAngle = 360 / levels.length;
-let currentRotation = 0;
+const totalSteps = levels.length;
+const stepAngle = 360 / totalSteps;
+const radius = 240;
 
-// ---------- Staircase Rendering ----------
 function renderStaircase() {
   staircaseEl.innerHTML = "";
 
@@ -36,22 +32,38 @@ function renderStaircase() {
       step.classList.add("locked");
     }
 
-    // Position step around the circle
-    const angle = index * stepAngle;
-    step.style.transform = `rotate(${angle}deg) translateX(180px) rotate(-${angle}deg)`;
+    const rel = ((index - currentLevelIndex) % totalSteps + totalSteps) % totalSteps;
+    const angle = rel * stepAngle;
+    const dist = Math.min(rel, totalSteps - rel);
 
-    step.textContent = `${index + 1}. ${level.name}`;
+    let depth, scale;
+    if (dist === 0) {
+      depth = 100;
+      scale = 1.35;
+    } else if (dist === 1) {
+      depth = 40;
+      scale = 1.05;
+    } else if (dist === 2) {
+      depth = -20;
+      scale = 0.9;
+    } else if (dist <= 4) {
+      depth = -80;
+      scale = 0.7;
+    } else {
+      depth = -150;
+      scale = 0.5;
+    }
+
+    step.style.transform = `rotate(${angle}deg) translateX(${radius}px) rotate(-${angle}deg) translateZ(${depth}px) scale(${scale})`;
+
+    step.textContent = `${index + 1}. ${level.label}`;
     staircaseEl.appendChild(step);
   });
-
-  // Rotate the whole staircase so the current level is at the front
-  currentRotation = -currentLevelIndex * stepAngle;
-  staircaseEl.style.transform = `rotate(${currentRotation}deg)`;
 }
 
 function updateLevelInfo() {
   const level = levels[currentLevelIndex];
-  levelInfoEl.textContent = `${level.name} — ${level.description}`;
+  levelInfoEl.textContent = `${level.label} — ${level.description}`;
 }
 
 function loadLevel() {
@@ -62,7 +74,6 @@ function loadLevel() {
   updateLevelInfo();
   generateQuestion();
 
-  // Free Fall unlocks when any unlocked level has unlocksFreeFall = true
   const freefallUnlocked = levels.some(
     (level, index) => index <= unlockedLevelIndex && level.unlocksFreeFall
   );
@@ -88,35 +99,113 @@ function goToNextLevel() {
   }
 }
 
-// ---------- Question Generation ----------
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function makeOptions(modulus, correct) {
+  if (modulus === 1) {
+    return [0, 1, 2];
+  }
+  const options = [];
+  for (let i = 0; i < modulus; i++) {
+    options.push(i);
+  }
+  return options;
+}
+
 function generateQuestion() {
   const level = levels[currentLevelIndex];
-  let question, correctAnswer, options;
+  const n = level.modulus;
+  const range = level.range || [0, n - 1];
+
+  let question = "";
+  let correctAnswer = 0;
+  let options = [];
 
   switch (level.operation) {
+    case "constantZero":
+      question = `0 mod ${n} = ?`;
+      correctAnswer = 0;
+      options = makeOptions(n, 0);
+      break;
+
     case "simple":
-      ({ question, correctAnswer, options } = generateSimpleQuestion(level));
+      const x = randInt(range[0], range[1]);
+      question = `${x} mod ${n} = ?`;
+      correctAnswer = x % n;
+      options = makeOptions(n, correctAnswer);
       break;
-    case "addition":
-      ({ question, correctAnswer, options } = generateAdditionQuestion(level));
+
+    case "addition": {
+      const a = randInt(0, range[1]);
+      const b = randInt(0, range[1]);
+      question = `${a} + ${b} mod ${n} = ?`;
+      correctAnswer = (a + b) % n;
+      options = makeOptions(n, correctAnswer);
       break;
-    case "multiplication":
-      ({ question, correctAnswer, options } = generateMultiplicationQuestion(level));
+    }
+
+    case "additionChain": {
+      const a = randInt(0, range[1]);
+      const b = randInt(0, range[1]);
+      const c = randInt(0, range[1]);
+      question = `${a} + ${b} + ${c} mod ${n} = ?`;
+      correctAnswer = (a + b + c) % n;
+      options = makeOptions(n, correctAnswer);
       break;
+    }
+
+    case "multiplication": {
+      const a = randInt(0, range[1]);
+      const b = randInt(0, range[1]);
+      question = `${a} × ${b} mod ${n} = ?`;
+      correctAnswer = (a * b) % n;
+      options = makeOptions(n, correctAnswer);
+      break;
+    }
+
+    case "multiplicationChain": {
+      const a = randInt(0, range[1]);
+      const b = randInt(0, range[1]);
+      const c = randInt(0, range[1]);
+      question = `${a} × ${b} × ${c} mod ${n} = ?`;
+      correctAnswer = (a * b * c) % n;
+      options = makeOptions(n, correctAnswer);
+      break;
+    }
+
     case "mixed":
       if (Math.random() < 0.5) {
-        ({ question, correctAnswer, options } = generateAdditionQuestion(level));
+        const a = randInt(0, range[1]);
+        const b = randInt(0, range[1]);
+        question = `${a} + ${b} mod ${n} = ?`;
+        correctAnswer = (a + b) % n;
       } else {
-        ({ question, correctAnswer, options } = generateMultiplicationQuestion(level));
+        const a = randInt(0, range[1]);
+        const b = randInt(0, range[1]);
+        question = `${a} × ${b} mod ${n} = ?`;
+        correctAnswer = (a * b) % n;
       }
+      options = makeOptions(n, correctAnswer);
       break;
+
+    case "mixedChain": {
+      const a = randInt(0, range[1]);
+      const b = randInt(0, range[1]);
+      const c = randInt(0, range[1]);
+      question = `${a} + ${b} × ${c} mod ${n} = ?`;
+      correctAnswer = (a + b * c) % n;
+      options = makeOptions(n, correctAnswer);
+      break;
+    }
+
     default:
       question = "Not implemented yet.";
       correctAnswer = 0;
       options = [0];
   }
 
-  // Shuffle options
   options = options.sort(() => Math.random() - 0.5);
 
   questionTextEl.textContent = question;
@@ -130,55 +219,6 @@ function generateQuestion() {
   });
 }
 
-function generateSimpleQuestion(level) {
-  // For mod 1, we want a few extra options to make it less trivial
-  const maxRandom = level.modulus === 1 ? 20 : 30;
-  const randomNumber = Math.floor(Math.random() * maxRandom) + 1;
-  const correctAnswer = randomNumber % level.modulus;
-
-  let options;
-  if (level.modulus === 1) {
-    options = [0, 1, 2];
-  } else {
-    options = [];
-    for (let i = 0; i < level.modulus; i++) {
-      options.push(i);
-    }
-  }
-
-  const question = `${randomNumber} mod ${level.modulus} = ?`;
-  return { question, correctAnswer, options };
-}
-
-function generateAdditionQuestion(level) {
-  const a = Math.floor(Math.random() * level.modulus);
-  const b = Math.floor(Math.random() * level.modulus);
-  const correctAnswer = (a + b) % level.modulus;
-
-  const options = [];
-  for (let i = 0; i < level.modulus; i++) {
-    options.push(i);
-  }
-
-  const question = `${a} + ${b} mod ${level.modulus} = ?`;
-  return { question, correctAnswer, options };
-}
-
-function generateMultiplicationQuestion(level) {
-  const a = Math.floor(Math.random() * level.modulus);
-  const b = Math.floor(Math.random() * level.modulus);
-  const correctAnswer = (a * b) % level.modulus;
-
-  const options = [];
-  for (let i = 0; i < level.modulus; i++) {
-    options.push(i);
-  }
-
-  const question = `${a} × ${b} mod ${level.modulus} = ?`;
-  return { question, correctAnswer, options };
-}
-
-// ---------- Answer Checking ----------
 function checkAnswer(selected, correct) {
   if (selected === correct) {
     feedbackEl.textContent = "Correct!";
@@ -197,7 +237,6 @@ function checkAnswer(selected, correct) {
   }
 }
 
-// ---------- Event Listeners ----------
 nextLevelBtn.addEventListener("click", goToNextLevel);
 
 freefallBtn.addEventListener("click", () => {
@@ -206,5 +245,4 @@ freefallBtn.addEventListener("click", () => {
   }
 });
 
-// ---------- Start Game ----------
 loadLevel();
