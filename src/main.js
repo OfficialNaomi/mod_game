@@ -28,11 +28,28 @@ function makeOptions(modulus, correct) {
   if (modulus === 1) {
     return [0, 1, 2];
   }
-  const options = [];
-  for (let i = 0; i < modulus; i++) {
-    options.push(i);
+
+  // For small mods, show all possible answers
+  if (modulus <= 8) {
+    const options = [];
+    for (let i = 0; i < modulus; i++) {
+      options.push(i);
+    }
+    return options;
   }
-  return options;
+
+  // For larger mods, show correct + 4 random wrong answers
+  const options = new Set();
+  options.add(correct);
+
+  while (options.size < 5) {
+    const wrong = Math.floor(Math.random() * modulus);
+    if (wrong !== correct) {
+      options.add(wrong);
+    }
+  }
+
+  return Array.from(options);
 }
 
 // ---------- Rendering Staircase ----------
