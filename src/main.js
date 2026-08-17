@@ -48,7 +48,10 @@ function renderStaircase() {
       step.classList.add("locked");
     }
 
-    step.textContent = level.name;
+    // Descending staircase effect
+    step.style.marginLeft = `${index * 18}px`;
+
+    step.textContent = `${index + 1}. ${level.name}`;
     staircaseEl.appendChild(step);
   });
 }
