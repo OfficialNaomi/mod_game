@@ -1,105 +1,66 @@
-// Global level definitions
-const LEVELS = [
-  // ---- Mod 1 ----
-  {
-    id: 1,
-    name: "Mod 1",
-    modulus: 1,
-    operation: "simple",
-    description: "Everything is 0",
-    requiredCorrect: 3,
-  },
+const LEVELS = [];
 
-  // ---- Mod 2 ----
-  {
-    id: 2,
-    name: "Mod 2 Addition",
-    modulus: 2,
-    operation: "addition",
-    description: "Parity, odd/even",
-    requiredCorrect: 3,
-  },
-  {
-    id: 3,
-    name: "Mod 2 Multiplication",
-    modulus: 2,
-    operation: "multiplication",
-    description: "AND logic",
-    requiredCorrect: 3,
-  },
-  {
-    id: 4,
-    name: "Mod 2 Mixed",
-    modulus: 2,
-    operation: "mixed",
-    description: "Addition & multiplication",
-    requiredCorrect: 3,
-  },
+function addLevel(level) {
+  LEVELS.push({
+    id: LEVELS.length + 1,
+    requiredCorrect: 1,
+    ...level
+  });
+}
 
-  // ---- Mod 3 to Mod 10 ----
-  {
-    id: 5,
-    name: "Mod 3",
-    modulus: 3,
-    operation: "simple",
-    description: "Three states",
-    requiredCorrect: 3,
-  },
-  {
-    id: 6,
-    name: "Mod 4",
-    modulus: 4,
-    operation: "simple",
-    description: "Quarters, seasons",
-    requiredCorrect: 3,
-  },
-  {
-    id: 7,
-    name: "Mod 5",
-    modulus: 5,
-    operation: "simple",
-    description: "Fingers, pentagon",
-    requiredCorrect: 3,
-  },
-  {
-    id: 8,
-    name: "Mod 6",
-    modulus: 6,
-    operation: "simple",
-    description: "Hexagon, dice",
-    requiredCorrect: 3,
-  },
-  {
-    id: 9,
-    name: "Mod 7",
-    modulus: 7,
-    operation: "simple",
-    description: "Weekdays",
-    requiredCorrect: 3,
-  },
-  {
-    id: 10,
-    name: "Mod 8",
-    modulus: 8,
-    operation: "simple",
-    description: "Octagon, bytes",
-    requiredCorrect: 3,
-  },
-  {
-    id: 11,
-    name: "Mod 9",
-    modulus: 9,
-    operation: "simple",
-    description: "Digits before rollover",
-    requiredCorrect: 3,
-  },
-  {
-    id: 12,
-    name: "Mod 10",
-    modulus: 10,
-    operation: "simple",
-    description: "Decimal system",
-    requiredCorrect: 3,
-    unlocksFreeFall: true,  // ← after completing this level
-  },
+// ---------- Mod 1: 5 steps ----------
+addLevel({
+  modulus: 1,
+  operation: "constantZero",
+  label: "0",
+  description: "Zero",
+});
+addLevel({
+  modulus: 1,
+  operation: "simple",
+  label: "Random Number",
+  description: "Any number mod 1",
+  range: [1, 30],
+});
+addLevel({
+  modulus: 1,
+  operation: "addition",
+  label: "Addition",
+  description: "Addition mod 1",
+});
+addLevel({
+  modulus: 1,
+  operation: "multiplication",
+  label: "Multiplication",
+  description: "Multiplication mod 1",
+});
+addLevel({
+  modulus: 1,
+  operation: "mixed",
+  label: "Mixed",
+  description: "Addition & multiplication",
+});
+
+// ---------- Mod 2: 10 steps ----------
+const mod2Steps = [
+  { operation: "simple", label: "Simple Small", range: [1, 20] },
+  { operation: "simple", label: "Simple Large", range: [21, 100] },
+  { operation: "addition", label: "Addition" },
+  { operation: "additionChain", label: "Addition Chain" },
+  { operation: "multiplication", label: "Multiplication" },
+  { operation: "multiplicationChain", label: "Multiplication Chain" },
+  { operation: "mixed", label: "Mixed" },
+  { operation: "addition", label: "Addition Large", range: [0, 10] }, // numbers can be larger than modulus
+  { operation: "multiplication", label: "Multiplication Large", range: [0, 10] },
+  { operation: "mixedChain", label: "Mixed Chain" },
 ];
+
+mod2Steps.forEach((def) => {
+  addLevel({
+    modulus: 2,
+    operation: def.operation,
+    label: def.label,
+    description: def.operation,
+    range: def.range || [0, 5],
+  });
+});
