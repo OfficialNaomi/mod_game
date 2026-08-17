@@ -20,9 +20,9 @@ const levels = [
 ];
 
 // ---------- Game State ----------
-let currentLevelIndex = 0;       // index in levels array
-let unlockedLevelIndex = 0;      // highest unlocked index
-let correctAnswersInLevel = 0;   // correct count for current level
+let currentLevelIndex = 0;
+let unlockedLevelIndex = 0;
+let correctAnswersInLevel = 0;
 
 // ---------- DOM Elements ----------
 const staircaseEl = document.getElementById("staircase");
@@ -31,10 +31,16 @@ const questionTextEl = document.getElementById("question-text");
 const answerOptionsEl = document.getElementById("answer-options");
 const feedbackEl = document.getElementById("feedback");
 const nextLevelBtn = document.getElementById("next-level-btn");
+const freefallBtn = document.getElementById("freefall-btn");
 
-// ---------- Level System Functions ----------
+// Staircase rotation settings
+const stepAngle = 360 / levels.length; // angle between steps
+let currentRotation = 0;
+
+// ---------- Staircase Rendering ----------
 function renderStaircase() {
   staircaseEl.innerHTML = "";
+
   levels.forEach((level, index) => {
     const step = document.createElement("div");
     step.classList.add("step");
@@ -48,12 +54,17 @@ function renderStaircase() {
       step.classList.add("locked");
     }
 
-    // Descending staircase effect
-    step.style.marginLeft = `${index * 18}px`;
+    // Position step around the circle
+    const angle = index * stepAngle;
+    step.style.transform = `rotate(${angle}deg) translateX(180px) rotate(-${angle}deg)`;
 
     step.textContent = `${index + 1}. ${level.name}`;
     staircaseEl.appendChild(step);
   });
+
+  // Rotate the whole staircase so the current level is at the front (bottom)
+  currentRotation = -currentLevelIndex * stepAngle;
+  staircaseEl.style.transform = `rotate(${currentRotation}deg)`;
 }
 
 function updateLevelInfo() {
@@ -68,6 +79,10 @@ function loadLevel() {
   renderStaircase();
   updateLevelInfo();
   generateQuestion();
+
+  // Update Free Fall button state
+  freefallBtn.disabled = currentLevelIndex < 9; // unlock after level 10 (index 9)
+  freefallBtn.title = currentLevelIndex < 9 ? "Unlocks after level 10" : "Start Free Fall";
 }
 
 function completeLevel() {
@@ -75,7 +90,6 @@ function completeLevel() {
     unlockedLevelIndex = Math.max(unlockedLevelIndex, currentLevelIndex + 1);
     nextLevelBtn.style.display = "block";
   } else {
-    // Last level? For now just show a message
     feedbackEl.textContent = "You reached the bottom!";
   }
 }
@@ -93,16 +107,16 @@ function generateQuestion() {
   let question, correctAnswer, options;
 
   if (level.operation === "simple") {
-    // Mod 1: any number mod 1 = 0
     const randomNumber = Math.floor(Math.random() * 20) + 1;
     question = `${randomNumber} mod ${level.modulus} = ?`;
     correctAnswer = randomNumber % level.modulus; // always 0
-    // Options: 0, 1, 2
     options = [0, 1, 2];
   } else if (level.operation === "addition") {
-    // For mod 2 addition, we'll implement later
-    question = "Coming soon...";
-    correctAnswer = 0;
+    // Temporary simple mod 2 addition
+    const a = Math.floor(Math.random() * 2);
+    const b = Math.floor(Math.random() * 2);
+    question = `${a} + ${b} mod 2 = ?`;
+    correctAnswer = (a + b) % 2;
     options = [0, 1];
   } else {
     question = "Not implemented yet.";
@@ -110,7 +124,7 @@ function generateQuestion() {
     options = [0];
   }
 
-  // Shuffle options (except for simple always 0? still shuffle)
+  // Shuffle options
   options = options.sort(() => Math.random() - 0.5);
 
   questionTextEl.textContent = question;
@@ -133,19 +147,24 @@ function checkAnswer(selected, correct) {
     if (correctAnswersInLevel >= levels[currentLevelIndex].requiredCorrect) {
       completeLevel();
     } else {
-      // Wait a moment then new question
       setTimeout(generateQuestion, 800);
     }
   } else {
     feedbackEl.textContent = `Wrong. The answer is ${correct}.`;
     feedbackEl.style.color = "#f38ba8";
-    // Reset correct count? For now, just give next question after delay
     setTimeout(generateQuestion, 1200);
   }
 }
 
 // ---------- Event Listeners ----------
 nextLevelBtn.addEventListener("click", goToNextLevel);
+
+// Placeholder for Free Fall
+freefallBtn.addEventListener("click", () => {
+  if (!freefallBtn.disabled) {
+    alert("Free Fall mode will be implemented soon!");
+  }
+});
 
 // ---------- Start Game ----------
 loadLevel();
