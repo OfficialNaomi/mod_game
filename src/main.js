@@ -287,6 +287,11 @@ function checkAnswer(selected, correct) {
     feedbackEl.style.color = "#a6e3a1";
     correctAnswersInStep++;
 
+    // Reward player
+    Player.gainXP(10);
+    UI.updateXP();
+    UI.updateLevel();
+
     if (correctAnswersInStep >= 1) {
       setTimeout(advanceStep, 600);
     } else {
@@ -295,6 +300,11 @@ function checkAnswer(selected, correct) {
   } else {
     feedbackEl.textContent = `Wrong. The answer is ${correct}.`;
     feedbackEl.style.color = "#f38ba8";
+
+    // Punish player
+    Player.takeDamage(10);
+    UI.updateHP();
+
     setTimeout(generateQuestion, 1200);
   }
 }
