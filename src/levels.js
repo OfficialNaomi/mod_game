@@ -1,6 +1,6 @@
 // ---------- Flight Definitions ----------
 // Each flight is a modulus with its own stair steps.
-// Steps define the operation and label for the question generator.
+// Steps define the operation, label, and range for the question generator.
 
 const FLIGHTS = [];
 
@@ -34,14 +34,14 @@ createFlight(1, 5, (i) => {
 const mod2StepDefs = [
   { operation: "simple", label: "Simple Small", range: [1, 20] },
   { operation: "simple", label: "Simple Large", range: [21, 100] },
-  { operation: "addition", label: "Addition" },
-  { operation: "additionChain", label: "Addition Chain" },
-  { operation: "multiplication", label: "Multiplication" },
-  { operation: "multiplicationChain", label: "Multiplication Chain" },
-  { operation: "mixed", label: "Mixed" },
+  { operation: "addition", label: "Addition", range: [0, 5] },
+  { operation: "additionChain", label: "Addition Chain", range: [0, 5] },
+  { operation: "multiplication", label: "Multiplication", range: [0, 5] },
+  { operation: "multiplicationChain", label: "Multiplication Chain", range: [0, 5] },
+  { operation: "mixed", label: "Mixed", range: [0, 5] },
   { operation: "addition", label: "Addition Large", range: [0, 10] },
   { operation: "multiplication", label: "Multiplication Large", range: [0, 10] },
-  { operation: "mixedChain", label: "Mixed Chain" },
+  { operation: "mixedChain", label: "Mixed Chain", range: [0, 5] },
 ];
 
 createFlight(2, 10, (i) => ({
@@ -49,58 +49,68 @@ createFlight(2, 10, (i) => ({
   description: mod2StepDefs[i].label,
 }));
 
-// ---------- Mod 3: 15 steps ----------
-const mod3Operations = [
-  "simple", "addition", "additionChain", "multiplication", "multiplicationChain",
-  "mixed", "mixedChain", "simple", "addition", "additionChain",
-  "multiplication", "multiplicationChain", "mixed", "mixedChain", "simple"
-];
-
-const mod3Labels = [
-  "Simple 1", "Addition 1", "Addition Chain 1", "Multiplication 1", "Multiplication Chain 1",
-  "Mixed 1", "Mixed Chain 1", "Simple 2", "Addition 2", "Addition Chain 2",
-  "Multiplication 2", "Multiplication Chain 2", "Mixed 2", "Mixed Chain 2", "Simple 3"
-];
-
-createFlight(3, 15, (i) => ({
-  operation: mod3Operations[i],
-  label: mod3Labels[i],
-  description: mod3Labels[i],
-  range: mod3Operations[i].includes("Chain") ? [0, 5] : [0, 3],
-}));
-
-// ---------- Helper to create standard 15-step flights ----------
-function createStandardFlight(modulus) {
+// ---------- Progressive flight generator for mods 3+ ----------
+function createProgressiveFlight(modulus, stepCount = 15) {
+  // Operation pattern (repeats every 5 steps, then shifts for variety)
   const operations = [
     "simple", "addition", "additionChain", "multiplication", "multiplicationChain",
     "mixed", "mixedChain", "simple", "addition", "additionChain",
     "multiplication", "multiplicationChain", "mixed", "mixedChain", "simple"
   ];
+
   const labels = [
     "Simple 1", "Addition 1", "Addition Chain 1", "Multiplication 1", "Multiplication Chain 1",
     "Mixed 1", "Mixed Chain 1", "Simple 2", "Addition 2", "Addition Chain 2",
     "Multiplication 2", "Multiplication Chain 2", "Mixed 2", "Mixed Chain 2", "Simple 3"
   ];
 
-  createFlight(modulus, 15, (i) => ({
-    operation: operations[i],
-    label: labels[i],
-    description: labels[i],
-    range: operations[i].includes("Chain") ? [0, 8] : [0, 5],
-  }));
+  createFlight(modulus, stepCount, (i) => {
+    const op = operations[i % operations.length];
+    const difficulty = i / (stepCount - 1); // 0 to 1
+
+    let range;
+
+    // Simple: start below modulus, later go above to force wrap
+    if (op === "simple") {
+      if (difficulty < 0.3) {
+        range = [1, Math.max(2, Math.floor(modulus * 0.5))];
+      } else if (difficulty < 0.6) {
+        range = [1, modulus - 1];
+      } else {
+        range = [modulus, Math.floor(modulus * 2)];
+      }
+    }
+    // Addition / addition chains: operands grow from small to near modulus
+    else if (op === "addition" || op === "additionChain") {
+      const maxOperand = Math.max(2, Math.floor(modulus * (0.2 + difficulty * 0.8)));
+      range = [0, maxOperand];
+    }
+    // Multiplication / mixed: keep operands smaller, but grow slightly
+    else {
+      const maxOperand = Math.max(2, Math.floor(modulus * (0.15 + difficulty * 0.45)));
+      range = [0, maxOperand];
+    }
+
+    return {
+      operation: op,
+      label: labels[i],
+      description: labels[i],
+      range,
+    };
+  });
 }
 
-// ---------- Mods 4-10: 15 steps each ----------
-for (let m = 4; m <= 10; m++) {
-  createStandardFlight(m);
+// ---------- Mods 3-10: 15 steps each ----------
+for (let m = 3; m <= 10; m++) {
+  createProgressiveFlight(m, 15);
 }
 
 // ---------- Mods 11-60: 15 steps each ----------
 for (let m = 11; m <= 60; m++) {
-  createStandardFlight(m);
+  createProgressiveFlight(m, 15);
 }
 
-// ---------- Bonus flights: 10 steps each ----------
+// ---------- Bonus flights: 10 steps each (same progressive idea) ----------
 function createBonusFlight(modulus) {
   const operations = [
     "simple", "addition", "multiplication", "mixed", "simple",
@@ -111,12 +121,32 @@ function createBonusFlight(modulus) {
     "Addition Chain", "Multiplication Chain", "Mixed Chain", "Addition 2", "Multiplication 2"
   ];
 
-  createFlight(modulus, 10, (i) => ({
-    operation: operations[i],
-    label: labels[i],
-    description: labels[i],
-    range: operations[i].includes("Chain") ? [0, 10] : [0, 8],
-  }));
+  createFlight(modulus, 10, (i) => {
+    const difficulty = i / 9; // 0 to 1
+    const op = operations[i];
+    let range;
+
+    if (op === "simple") {
+      if (difficulty < 0.3) {
+        range = [1, Math.max(2, Math.floor(modulus * 0.3))];
+      } else if (difficulty < 0.7) {
+        range = [1, modulus - 1];
+      } else {
+        range = [modulus, Math.floor(modulus * 1.5)];
+      }
+    } else if (op === "addition" || op === "additionChain") {
+      range = [0, Math.max(2, Math.floor(modulus * (0.2 + difficulty * 0.6)))];
+    } else {
+      range = [0, Math.max(2, Math.floor(modulus * (0.15 + difficulty * 0.4)))];
+    }
+
+    return {
+      operation: op,
+      label: labels[i],
+      description: labels[i],
+      range,
+    };
+  });
 }
 
 createBonusFlight(100);
