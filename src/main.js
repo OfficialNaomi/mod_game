@@ -4,6 +4,14 @@ let currentStepIndex = 0;     // position within current flight
 let unlockedFlightIndex = 0;  // highest flight fully completed
 let correctAnswersInStep = 0; // correct count for current step (not used if required=1)
 
+let gameMode = "stairs";      // "stairs" or "freefall"
+
+// Free Fall state
+let freefallScore = 0;
+let freefallTimeLeft = 30;
+let freefallTimerInterval = null;
+let freefallUnlockedMods = [];
+
 // ---------- DOM ----------
 const staircaseEl = document.getElementById("staircase");
 const levelInfoEl = document.getElementById("level-info");
@@ -13,8 +21,16 @@ const feedbackEl = document.getElementById("feedback");
 const upBtn = document.getElementById("up-btn");
 const freefallBtn = document.getElementById("freefall-btn");
 
+const freefallPanel = document.getElementById("freefall-panel");
+const freefallTimerEl = document.getElementById("freefall-timer");
+const freefallScoreEl = document.getElementById("freefall-score");
+const freefallQuestionTextEl = document.getElementById("freefall-question-text");
+const freefallAnswerOptionsEl = document.getElementById("freefall-answer-options");
+const freefallFeedbackEl = document.getElementById("freefall-feedback");
+const freefallExitBtn = document.getElementById("freefall-exit-btn");
+
 // ---------- Spiral settings ----------
-const stepAngle = 18;   // degrees between visible steps (adjust for spacing)
+const stepAngle = 18;   // degrees between visible steps
 const radius = 220;
 const currentStepScale = 1.35;
 const currentStepDepth = 120;
@@ -28,8 +44,6 @@ function makeOptions(modulus, correct) {
   if (modulus === 1) {
     return [0, 1, 2];
   }
-
-  // For small mods, show all possible answers
   if (modulus <= 8) {
     const options = [];
     for (let i = 0; i < modulus; i++) {
@@ -37,18 +51,14 @@ function makeOptions(modulus, correct) {
     }
     return options;
   }
-
-  // For larger mods, show correct + 4 random wrong answers
   const options = new Set();
   options.add(correct);
-
   while (options.size < 5) {
     const wrong = Math.floor(Math.random() * modulus);
     if (wrong !== correct) {
       options.add(wrong);
     }
   }
-
   return Array.from(options);
 }
 
@@ -62,20 +72,17 @@ function renderStaircase() {
     const stepEl = document.createElement("div");
     stepEl.classList.add("step");
 
-    // Current step
     if (i === currentStepIndex) {
       stepEl.classList.add("current");
     }
-    // Steps already passed (behind)
     if (i < currentStepIndex) {
       stepEl.classList.add("passed");
     }
-    // Steps ahead (down)
     if (i > currentStepIndex) {
       stepEl.classList.add("ahead");
     }
 
-    const relative = i - currentStepIndex; // 0 = current, positive = ahead
+    const relative = i - currentStepIndex;
     const angle = relative * stepAngle;
     const dist = Math.abs(relative);
 
@@ -97,7 +104,6 @@ function renderStaircase() {
       scale = 0.6;
     }
 
-    // If passed, move far behind and hide
     if (relative < 0) {
       depth = -300;
       scale = 0.3;
@@ -115,15 +121,9 @@ function updateUI() {
   const stepDef = flight.steps[currentStepIndex];
   levelInfoEl.textContent = `Mod ${flight.modulus} — Step ${currentStepIndex + 1}/${flight.steps.length} (${stepDef.label})`;
 
-  // Up button state
   upBtn.disabled = currentStepIndex === 0;
-  if (currentStepIndex > 0) {
-    upBtn.title = "Go back up one step";
-  } else {
-    upBtn.title = "You are at the top of this flight";
-  }
+  upBtn.title = currentStepIndex > 0 ? "Go back up one step" : "You are at the top of this flight";
 
-  // Free Fall button: unlocked after flight with modulus 10 is completed
   const freefallUnlocked = FLIGHTS.some(
     (f, idx) => idx <= unlockedFlightIndex && f.modulus === 10
   );
@@ -166,7 +166,7 @@ function goUpOneStep() {
   }
 }
 
-// ---------- Question Generation ----------
+// ---------- Question Generation (Staircase) ----------
 function generateQuestion() {
   const flight = FLIGHTS[currentFlightIndex];
   const stepDef = flight.steps[currentStepIndex];
@@ -279,8 +279,7 @@ function checkAnswer(selected, correct) {
     feedbackEl.style.color = "#a6e3a1";
     correctAnswersInStep++;
 
-    const flight = FLIGHTS[currentFlightIndex];
-    if (correctAnswersInStep >= 1) { // each step requires 1 correct
+    if (correctAnswersInStep >= 1) {
       setTimeout(advanceStep, 600);
     } else {
       setTimeout(generateQuestion, 800);
@@ -292,13 +291,140 @@ function checkAnswer(selected, correct) {
   }
 }
 
+// ---------- Free Fall Mode ----------
+function getUnlockedMods() {
+  const mods = [];
+  for (let i = 0; i <= unlockedFlightIndex; i++) {
+    const mod = FLIGHTS[i].modulus;
+    if (!mods.includes(mod)) {
+      mods.push(mod);
+    }
+  }
+  return mods;
+}
+
+function startFreefall() {
+  gameMode = "freefall";
+  freefallScore = 0;
+  freefallTimeLeft = 30;
+  freefallUnlockedMods = getUnlockedMods();
+
+  // Hide stairs, show freefall panel
+  document.getElementById("staircase-container").style.display = "none";
+  freefallPanel.style.display = "block";
+
+  updateFreefallUI();
+  generateFreefallQuestion();
+
+  // Start timer
+  freefallTimerInterval = setInterval(() => {
+    freefallTimeLeft--;
+    updateFreefallUI();
+    if (freefallTimeLeft <= 0) {
+      endFreefall();
+    }
+  }, 1000);
+}
+
+function endFreefall() {
+  clearInterval(freefallTimerInterval);
+  freefallFeedbackEl.textContent = `Time's up! Final score: ${freefallScore}`;
+  freefallFeedbackEl.style.color = "#f9e2af";
+}
+
+function exitFreefall() {
+  clearInterval(freefallTimerInterval);
+  gameMode = "stairs";
+  document.getElementById("staircase-container").style.display = "flex";
+  freefallPanel.style.display = "none";
+  loadStep(); // refresh the stairs view
+}
+
+function updateFreefallUI() {
+  freefallTimerEl.textContent = freefallTimeLeft;
+  freefallScoreEl.textContent = `Score: ${freefallScore}`;
+}
+
+function generateFreefallQuestion() {
+  if (gameMode !== "freefall") return;
+
+  // Pick a random modulus from unlocked mods
+  const mod = freefallUnlockedMods[Math.floor(Math.random() * freefallUnlockedMods.length)];
+
+  // Pick a random operation
+  const operations = ["simple", "addition", "multiplication"];
+  const op = operations[Math.floor(Math.random() * operations.length)];
+
+  let question = "";
+  let correctAnswer = 0;
+  let options = [];
+
+  switch (op) {
+    case "simple": {
+      const maxNum = Math.max(30, mod * 2);
+      const x = randInt(1, maxNum);
+      question = `${x} mod ${mod} = ?`;
+      correctAnswer = x % mod;
+      break;
+    }
+    case "addition": {
+      const maxOperand = Math.min(20, mod - 1);
+      const a = randInt(0, maxOperand);
+      const b = randInt(0, maxOperand);
+      question = `${a} + ${b} mod ${mod} = ?`;
+      correctAnswer = (a + b) % mod;
+      break;
+    }
+    case "multiplication": {
+      const maxOperand = Math.min(12, mod - 1);
+      const a = randInt(0, maxOperand);
+      const b = randInt(0, maxOperand);
+      question = `${a} × ${b} mod ${mod} = ?`;
+      correctAnswer = (a * b) % mod;
+      break;
+    }
+  }
+
+  options = makeOptions(mod, correctAnswer).sort(() => Math.random() - 0.5);
+
+  freefallQuestionTextEl.textContent = question;
+  freefallAnswerOptionsEl.innerHTML = "";
+  freefallFeedbackEl.textContent = "";
+
+  options.forEach((option) => {
+    const button = document.createElement("button");
+    button.textContent = option;
+    button.addEventListener("click", () => checkFreefallAnswer(option, correctAnswer));
+    freefallAnswerOptionsEl.appendChild(button);
+  });
+}
+
+function checkFreefallAnswer(selected, correct) {
+  if (selected === correct) {
+    freefallScore++;
+    updateFreefallUI();
+    freefallFeedbackEl.textContent = "Correct!";
+    freefallFeedbackEl.style.color = "#a6e3a1";
+    // Immediately generate next question
+    generateFreefallQuestion();
+  } else {
+    freefallFeedbackEl.textContent = `Wrong. Answer: ${correct}`;
+    freefallFeedbackEl.style.color = "#f38ba8";
+    // Short delay then next question
+    setTimeout(generateFreefallQuestion, 800);
+  }
+}
+
 // ---------- Event Listeners ----------
 upBtn.addEventListener("click", goUpOneStep);
+
 freefallBtn.addEventListener("click", () => {
   if (!freefallBtn.disabled) {
-    alert("Free Fall mode will be implemented soon!");
+    startFreefall();
   }
 });
+
+freefallExitBtn.addEventListener("click", exitFreefall);
 
 // ---------- Start Game ----------
 loadStep();
