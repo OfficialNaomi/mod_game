@@ -242,6 +242,23 @@ header h1 {
   cursor: not-allowed;
 }
 
+#freefall-retry-btn {
+  margin-top: 1rem;
+  background: #f9e2af;
+  color: #11111b;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#freefall-retry-btn:hover {
+  background: #f5c2e7;
+}
+
 #question-panel {
   position: relative;
   z-index: 20;
