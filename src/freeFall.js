@@ -14,6 +14,7 @@ const FreeFall = {
   answerOptionsEl: null,
   feedbackEl: null,
   exitBtn: null,
+  retryBtn: null,
 
   init() {
     this.panel = document.getElementById("freefall-panel");
@@ -23,11 +24,19 @@ const FreeFall = {
     this.answerOptionsEl = document.getElementById("freefall-answer-options");
     this.feedbackEl = document.getElementById("freefall-feedback");
     this.exitBtn = document.getElementById("freefall-exit-btn");
+    this.retryBtn = document.getElementById("freefall-retry-btn");
 
     this.exitBtn.addEventListener("click", () => this.exit());
+    this.retryBtn.addEventListener("click", () => this.retry());
   },
 
   start(unlockedMods) {
+    // Clear any existing timer first
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+
     this.score = 0;
     this.timeLeft = 30;
     this.unlockedMods = unlockedMods;
@@ -35,6 +44,7 @@ const FreeFall = {
 
     document.getElementById("staircase-container").style.display = "none";
     this.panel.style.display = "block";
+    this.retryBtn.style.display = "none";
 
     this.updateUI();
     this.generateQuestion();
@@ -51,17 +61,30 @@ const FreeFall = {
 
   end() {
     clearInterval(this.timerInterval);
+    this.timerInterval = null;
     this.active = false;
+
     this.feedbackEl.textContent = `Time's up! Final score: ${this.score}`;
     this.feedbackEl.style.color = "#f9e2af";
+    this.retryBtn.style.display = "inline-block";
+  },
+
+  retry() {
+    // Start a new run with the same unlocked mods
+    this.start(this.unlockedMods);
   },
 
   exit() {
-    clearInterval(this.timerInterval);
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+
     this.active = false;
 
     document.getElementById("staircase-container").style.display = "flex";
     this.panel.style.display = "none";
+    this.retryBtn.style.display = "none";
 
     if (typeof loadStep === "function") {
       loadStep();
