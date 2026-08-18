@@ -151,21 +151,32 @@ const FreeFall = {
     });
   },
 
-  checkAnswer(selected, correct) {
-    if (!this.active) return;
+checkAnswer(selected, correct) {
+  if (!this.active) return;
 
-    if (selected === correct) {
-      this.score++;
-      this.updateUI();
-      this.feedbackEl.textContent = "Correct!";
-      this.feedbackEl.style.color = "#a6e3a1";
-      this.generateQuestion();
-    } else {
-      this.feedbackEl.textContent = `Wrong. Answer: ${correct}`;
-      this.feedbackEl.style.color = "#f38ba8";
-      setTimeout(() => this.generateQuestion(), 800);
-    }
+  if (selected === correct) {
+    this.score++;
+    this.updateUI();
+    this.feedbackEl.textContent = "Correct!";
+    this.feedbackEl.style.color = "#a6e3a1";
+
+    // Reward in Free Fall too
+    Player.gainXP(10);
+    UI.updateXP();
+    UI.updateLevel();
+
+    this.generateQuestion();
+  } else {
+    this.feedbackEl.textContent = `Wrong. Answer: ${correct}`;
+    this.feedbackEl.style.color = "#f38ba8";
+
+    // Punish in Free Fall
+    Player.takeDamage(10);
+    UI.updateHP();
+
+    setTimeout(() => this.generateQuestion(), 800);
   }
+}
 };
 
 FreeFall.init();
