@@ -201,14 +201,43 @@ function bossFinished() {
 }
 
 function grantRewardForStep(stepDef) {
-  if (!stepDef || !stepDef.reward) return null;
+  if (!stepDef) return null;
 
-  const itemId = stepDef.reward;
+  let itemId = stepDef.reward;      // pre-set guaranteed drop
+  const tier = stepDef.rewardTier;  // dynamic pick
+
+  if (!itemId && tier) {
+    itemId = pickItemFromTier(tier);
+  }
+
+  if (!itemId) return null;
+
   const item = ITEMS[itemId];
   if (!item) return null;
 
   Inventory.add(itemId);
   return `You found: ${item.icon} ${item.name}!`;
+}
+
+function pickItemFromTier(tier) {
+  // Filter out items the player already owns (unless consumable)
+  const available = tier.items.filter((id) => {
+    const item = ITEMS[id];
+    if (!item) return false;
+    if (item.type === "consumable") return true;
+
+    const owned = Inventory.items.includes(id);
+    const equipped = Object.values(Inventory.equipped).includes(id);
+    return !owned && !equipped;
+  });
+
+  if (available.length === 0) {
+    // Fallback: first consumable in the tier so the player gets something useful
+    const potion = tier.items.find((id) => ITEMS[id] && ITEMS[id].type === "consumable");
+    return potion || null;
+  }
+
+  return available[Math.floor(Math.random() * available.length)];
 }
 
 function goUpOneStep() {

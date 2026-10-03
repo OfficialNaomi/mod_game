@@ -11,7 +11,7 @@ function createFlight(modulus, stepCount, stepFactory) {
 
 // ---------- Tiered Reward Pools ----------
 // Each tier corresponds to a stage of the descent.
-// When a reward step is reached, we pick a random item from the current tier.
+// The actual item is picked at drop time so duplicates can be filtered.
 
 const REWARD_TIERS = [
   // Tier 1: flights 1-5
@@ -48,17 +48,14 @@ function getTierForMod(mod) {
   return REWARD_TIERS[REWARD_TIERS.length - 1];
 }
 
-function pickRewardForMod(mod, stepIndex) {
-  // Guarantee the very first drop is a wooden sword
-  if (mod === 1 && stepIndex === 4) return "wooden_sword";
-
-  const tier = getTierForMod(mod);
-  return tier.items[Math.floor(Math.random() * tier.items.length)];
-}
-
 function attachReward(step, i, mod) {
   if ((i + 1) % 5 === 0) {
-    step.reward = pickRewardForMod(mod, i);
+    // Guarantee the very first drop is a wooden sword
+    if (mod === 1 && i === 4) {
+      step.reward = "wooden_sword";
+    } else {
+      step.rewardTier = getTierForMod(mod);
+    }
   }
   return step;
 }
