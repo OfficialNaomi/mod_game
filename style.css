@@ -1,7 +1,5 @@
 /* ========== Reset & Global ========== */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -13,17 +11,15 @@ body {
   justify-content: center;
   align-items: center;
   padding: 2rem 1rem;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
-/* ========== Main Container ========== */
 #game-container {
   width: 100%;
   max-width: 1100px;
   text-align: center;
 }
 
-/* ========== Header ========== */
 header h1 {
   font-size: 2.2rem;
   margin: 0;
@@ -37,7 +33,7 @@ header h1 {
   font-style: italic;
 }
 
-/* ========== Main Layout (Character + Game) ========== */
+/* ========== Main Layout ========== */
 #main-layout {
   display: flex;
   gap: 2rem;
@@ -79,7 +75,14 @@ header h1 {
   margin-top: 0.3rem;
 }
 
-/* HP and XP bars */
+#stats-display {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  font-size: 0.9rem;
+  color: #cdd6f4;
+}
+
 #hp-bar-container,
 #xp-bar-container {
   width: 100%;
@@ -125,16 +128,90 @@ header h1 {
   font-weight: bold;
 }
 
+/* ========== Inventory ========== */
+#inventory-panel {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+#inventory-panel h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #f9e2af;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.equip-slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: #313244;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.equip-slot.empty {
+  color: #6c7086;
+  font-style: italic;
+  cursor: default;
+}
+
+.equip-slot.filled {
+  background: #45475a;
+  color: #cdd6f4;
+}
+
+.equip-slot.filled:hover {
+  background: #585b70;
+}
+
+.slot-label {
+  color: #89b4fa;
+  font-weight: bold;
+}
+
+.inventory-item {
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: #1e1e2e;
+  border: 1px solid #45475a;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+}
+
+.inventory-item:hover {
+  background: #313244;
+  border-color: #89b4fa;
+}
+
+.inventory-item.consumable {
+  border-color: #a6e3a1;
+}
+
 /* ========== Game Area ========== */
 #game-area {
   display: flex;
   justify-content: center;
   align-items: center;
   flex: 1;
-  min-width: 0; /* Prevent overflow */
+  min-width: 0;
+  min-height: 700px;
+  position: relative;
 }
 
-/* ========== Staircase Container ========== */
+/* ========== Staircase ========== */
 #staircase-container {
   position: relative;
   width: 640px;
@@ -154,7 +231,6 @@ header h1 {
   transform-style: preserve-3d;
 }
 
-/* ========== Staircase Steps ========== */
 .step {
   position: absolute;
   width: 110px;
@@ -195,15 +271,8 @@ header h1 {
   pointer-events: none;
 }
 
-/* Step states */
-.step.passed {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.step.ahead {
-  opacity: 0.8;
-}
+.step.passed { opacity: 0; pointer-events: none; }
+.step.ahead  { opacity: 0.8; }
 
 /* ========== Question Panel ========== */
 #question-panel {
@@ -270,7 +339,8 @@ header h1 {
 }
 
 #up-btn,
-#freefall-btn {
+#freefall-btn,
+#challenge-btn {
   padding: 0.6rem 1rem;
   border: none;
   border-radius: 8px;
@@ -285,9 +355,7 @@ header h1 {
   color: #11111b;
 }
 
-#up-btn:hover:not(:disabled) {
-  background: #b4befe;
-}
+#up-btn:hover:not(:disabled) { background: #b4befe; }
 
 #up-btn:disabled {
   background: #313244;
@@ -306,9 +374,19 @@ header h1 {
   cursor: not-allowed;
 }
 
+#challenge-btn {
+  background: #f38ba8;
+  color: #11111b;
+}
+
+#challenge-btn:hover { background: #eba0ac; }
+
 /* ========== Free Fall Panel ========== */
 #freefall-panel {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 500px;
   max-width: 90vw;
   background: #181825;
@@ -316,7 +394,6 @@ header h1 {
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-  margin: 0 auto;
   text-align: center;
   z-index: 30;
 }
@@ -330,14 +407,8 @@ header h1 {
   color: #f9e2af;
 }
 
-#freefall-timer {
-  color: #f38ba8;
-  font-size: 2rem;
-}
-
-#freefall-score {
-  color: #a6e3a1;
-}
+#freefall-timer { color: #f38ba8; font-size: 2rem; }
+#freefall-score { color: #a6e3a1; }
 
 #freefall-question-text {
   font-size: 2rem;
@@ -376,39 +447,180 @@ header h1 {
   min-height: 1.5rem;
 }
 
-#freefall-retry-btn {
+#freefall-retry-btn,
+#freefall-exit-btn {
   margin-top: 1rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#freefall-retry-btn {
   background: #f9e2af;
   color: #11111b;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
 }
 
-#freefall-retry-btn:hover {
-  background: #f5c2e7;
-}
+#freefall-retry-btn:hover { background: #f5c2e7; }
 
 #freefall-exit-btn {
-  margin-top: 1.5rem;
   background: #cba6f7;
   color: #11111b;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  font-size: 1.2rem;
+}
+
+#freefall-exit-btn:hover { background: #b4befe; }
+
+/* ========== Boss Panel ========== */
+#boss-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 520px;
+  max-width: 90vw;
+  background: #181825;
+  border: 2px solid #f38ba8;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 0 40px rgba(243, 139, 168, 0.4);
+  text-align: center;
+  z-index: 30;
+}
+
+#boss-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+#boss-name {
+  font-size: 1.5rem;
   font-weight: bold;
+  color: #f38ba8;
+}
+
+#boss-hp-text {
+  font-size: 1rem;
+  color: #cdd6f4;
+}
+
+#boss-hp-bar-container {
+  width: 100%;
+  height: 22px;
+  background: #313244;
   border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+#boss-hp-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #f38ba8, #eba0ac);
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+
+#boss-art {
+  font-size: 5rem;
+  margin: 1rem 0;
+  animation: bossIdle 2s ease-in-out infinite;
+}
+
+@keyframes bossIdle {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+#boss-question-text {
+  font-size: 1.8rem;
+  margin: 1.5rem 0;
+  color: #cdd6f4;
+}
+
+#boss-answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+#boss-answer-options button {
+  background: #313244;
+  border: 2px solid #45475a;
+  color: #cdd6f4;
+  font-size: 1.2rem;
+  min-width: 55px;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+#boss-answer-options button:hover {
+  background: #45475a;
+  border-color: #f38ba8;
+  transform: translateY(-2px);
+}
+
+#boss-feedback {
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  min-height: 1.5rem;
+}
+
+#boss-player-status {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #cdd6f4;
+}
+
+#boss-button-row {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+#boss-potion-btn,
+#boss-flee-btn {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-#freefall-exit-btn:hover {
-  background: #b4befe;
+#boss-potion-btn {
+  background: #a6e3a1;
+  color: #11111b;
 }
+
+#boss-potion-btn:hover:not(:disabled) { background: #94e2d5; }
+
+#boss-potion-btn:disabled {
+  background: #313244;
+  color: #6c7086;
+  cursor: not-allowed;
+}
+
+#boss-flee-btn {
+  background: #6c7086;
+  color: #11111b;
+}
+
+#boss-flee-btn:hover { background: #7f849c; }
 
 /* ========== Footer ========== */
 footer {

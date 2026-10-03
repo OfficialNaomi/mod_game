@@ -3,6 +3,7 @@ let currentFlightIndex = 0;
 let currentStepIndex = 0;
 let unlockedFlightIndex = 0;
 let correctAnswersInStep = 0;
+let freeFallUnlocked = false;
 
 // ---------- DOM ----------
 const staircaseEl = document.getElementById("staircase");
@@ -11,6 +12,7 @@ const questionTextEl = document.getElementById("question-text");
 const answerOptionsEl = document.getElementById("answer-options");
 const feedbackEl = document.getElementById("feedback");
 const upBtn = document.getElementById("up-btn");
+const challengeBtn = document.getElementById("challenge-btn");
 const freefallBtn = document.getElementById("freefall-btn");
 
 // ---------- Spiral settings ----------
@@ -68,21 +70,14 @@ function renderStaircase() {
   staircaseEl.innerHTML = "";
 
   const flight = FLIGHTS[currentFlightIndex];
-  const totalSteps = flight.steps.length;
 
   flight.steps.forEach((stepDef, i) => {
     const stepEl = document.createElement("div");
     stepEl.classList.add("step");
 
-    if (i === currentStepIndex) {
-      stepEl.classList.add("current");
-    }
-    if (i < currentStepIndex) {
-      stepEl.classList.add("passed");
-    }
-    if (i > currentStepIndex) {
-      stepEl.classList.add("ahead");
-    }
+    if (i === currentStepIndex) stepEl.classList.add("current");
+    if (i < currentStepIndex) stepEl.classList.add("passed");
+    if (i > currentStepIndex) stepEl.classList.add("ahead");
 
     const relative = i - currentStepIndex;
     const angle = relative * stepAngle;
@@ -128,12 +123,10 @@ function updateUI() {
   upBtn.disabled = currentStepIndex === 0;
   upBtn.title = currentStepIndex > 0 ? "Go back up one step" : "You are at the top of this flight";
 
-  const freefallUnlocked = FLIGHTS.some(
-    (f, idx) => idx <= unlockedFlightIndex && f.modulus === 10
-  );
-
-  freefallBtn.disabled = !freefallUnlocked;
-  freefallBtn.title = freefallUnlocked ? "Start Free Fall" : "Unlocks after completing Mod 10";
+  freefallBtn.disabled = !freeFallUnlocked;
+  freefallBtn.title = freeFallUnlocked
+    ? "Start Free Fall"
+    : "Unlocks after defeating the final boss";
 }
 
 function loadStep() {
@@ -149,20 +142,73 @@ function advanceStep() {
 
   if (currentStepIndex < flight.steps.length - 1) {
     currentStepIndex++;
+    const msg = grantRewardForStep(flight.steps[currentStepIndex]);
     loadStep();
+    if (msg) {
+      feedbackEl.textContent = msg;
+      feedbackEl.style.color = "#f9e2af";
+    }
   } else {
+    // Flight complete
     unlockedFlightIndex = Math.max(unlockedFlightIndex, currentFlightIndex);
 
-    if (currentFlightIndex < FLIGHTS.length - 1) {
-      currentFlightIndex++;
-      currentStepIndex = 0;
-      feedbackEl.textContent = `You descended to Mod ${FLIGHTS[currentFlightIndex].modulus}!`;
-      setTimeout(loadStep, 1200);
-    } else {
-      feedbackEl.textContent = "You reached the bottom of all flights!";
-      updateUI();
+    const bossKey = flight.modulus;
+    if (BOSSES[bossKey]) {
+      challengeBtn.style.display = "inline-block";
+      challengeBtn.textContent = `⚔️ Challenge ${BOSSES[bossKey].name}`;
+      challengeBtn.onclick = () => {
+        challengeBtn.style.display = "none";
+        Boss.start(bossKey);
+      };
+      feedbackEl.textContent = BOSSES[bossKey].intro;
+      feedbackEl.style.color = "#f9e2af";
+      return;
     }
+
+    goToNextFlight();
   }
+}
+
+function goToNextFlight() {
+  if (currentFlightIndex < FLIGHTS.length - 1) {
+    currentFlightIndex++;
+    currentStepIndex = 0;
+    const msg = grantRewardForStep(FLIGHTS[currentFlightIndex].steps[0]);
+    loadStep();
+    if (msg) {
+      feedbackEl.textContent = msg;
+      feedbackEl.style.color = "#f9e2af";
+    } else {
+      feedbackEl.textContent = `You descended to Mod ${FLIGHTS[currentFlightIndex].modulus}!`;
+    }
+  } else {
+    // End of all flights — final boss
+    challengeBtn.style.display = "inline-block";
+    challengeBtn.textContent = "⚔️ Challenge The Mod Devourer";
+    challengeBtn.onclick = () => {
+      challengeBtn.style.display = "none";
+      Boss.start("final");
+    };
+    feedbackEl.textContent = "The Mod Devourer awaits...";
+    feedbackEl.style.color = "#f38ba8";
+  }
+}
+
+// Called by Boss after winning, losing, or fleeing
+function bossFinished() {
+  loadStep();
+  goToNextFlight();
+}
+
+function grantRewardForStep(stepDef) {
+  if (!stepDef || !stepDef.reward) return null;
+
+  const itemId = stepDef.reward;
+  const item = ITEMS[itemId];
+  if (!item) return null;
+
+  Inventory.add(itemId);
+  return `You found: ${item.icon} ${item.name}!`;
 }
 
 function goUpOneStep() {
@@ -172,7 +218,7 @@ function goUpOneStep() {
   }
 }
 
-// ---------- Question Generation (Staircase) ----------
+// ---------- Question Generation ----------
 function generateQuestion() {
   const flight = FLIGHTS[currentFlightIndex];
   const stepDef = flight.steps[currentStepIndex];
@@ -247,7 +293,6 @@ function generateQuestion() {
         question = `${a} × ${b} mod ${n} = ?`;
         correctAnswer = (a * b) % n;
       }
-
       options = makeOptions(n, correctAnswer);
       break;
     }
@@ -287,7 +332,6 @@ function checkAnswer(selected, correct) {
     feedbackEl.style.color = "#a6e3a1";
     correctAnswersInStep++;
 
-    // Reward player
     Player.gainXP(10);
     UI.updateXP();
     UI.updateLevel();
@@ -301,7 +345,6 @@ function checkAnswer(selected, correct) {
     feedbackEl.textContent = `Wrong. The answer is ${correct}.`;
     feedbackEl.style.color = "#f38ba8";
 
-    // Punish player
     Player.takeDamage(10);
     UI.updateHP();
 

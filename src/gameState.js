@@ -1,14 +1,19 @@
 // ---------- Player State ----------
 const Player = {
+  baseMaxHp: 100,
   maxHp: 100,
   hp: 100,
   xp: 0,
   xpToNext: 50,
   level: 1,
 
-  // Reduce HP by amount, return true if dead
+  attack: 0,
+  defense: 0,
+
   takeDamage(amount = 10) {
-    this.hp = Math.max(0, this.hp - amount);
+    const actual = Math.max(1, amount - this.defense);
+    this.hp = Math.max(0, this.hp - actual);
+
     if (this.hp <= 0) {
       this.handleDeath();
       return true;
@@ -16,18 +21,25 @@ const Player = {
     return false;
   },
 
-  // Add XP, handle level up
   gainXP(amount = 10) {
-    this.xp += amount;
+    const bonus = Inventory.getBonus("xpBonus");
+    this.xp += amount + bonus;
+
     while (this.xp >= this.xpToNext) {
       this.xp -= this.xpToNext;
       this.level++;
-      // Increase XP needed for next level (optional)
       this.xpToNext = Math.floor(this.xpToNext * 1.2);
     }
   },
 
-  // Reset HP after death
+  recalculateStats() {
+    this.attack = Inventory.getBonus("attack");
+    this.defense = Inventory.getBonus("defense");
+    this.maxHp = this.baseMaxHp + Inventory.getBonus("maxHp");
+
+    if (this.hp > this.maxHp) this.hp = this.maxHp;
+  },
+
   handleDeath() {
     alert("Game Over! You fell. Restarting from full HP.");
     this.hp = this.maxHp;
@@ -36,7 +48,6 @@ const Player = {
     this.xpToNext = 50;
   },
 
-  // Heal (for future potions)
   heal(amount) {
     this.hp = Math.min(this.maxHp, this.hp + amount);
   },

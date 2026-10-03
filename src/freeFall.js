@@ -1,5 +1,4 @@
 // ---------- Free Fall Mode ----------
-
 const FreeFall = {
   score: 0,
   timeLeft: 30,
@@ -31,7 +30,6 @@ const FreeFall = {
   },
 
   start(unlockedMods) {
-    // Clear any existing timer first
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
@@ -70,7 +68,6 @@ const FreeFall = {
   },
 
   retry() {
-    // Start a new run with the same unlocked mods
     this.start(this.unlockedMods);
   },
 
@@ -117,7 +114,6 @@ const FreeFall = {
         correctAnswer = x % mod;
         break;
       }
-
       case "addition": {
         const maxOperand = Math.min(20, mod - 1);
         const a = randInt(0, maxOperand);
@@ -126,7 +122,6 @@ const FreeFall = {
         correctAnswer = (a + b) % mod;
         break;
       }
-
       case "multiplication": {
         const maxOperand = Math.min(12, mod - 1);
         const a = randInt(0, maxOperand);
@@ -151,32 +146,30 @@ const FreeFall = {
     });
   },
 
-checkAnswer(selected, correct) {
-  if (!this.active) return;
+  checkAnswer(selected, correct) {
+    if (!this.active) return;
 
-  if (selected === correct) {
-    this.score++;
-    this.updateUI();
-    this.feedbackEl.textContent = "Correct!";
-    this.feedbackEl.style.color = "#a6e3a1";
+    if (selected === correct) {
+      this.score++;
+      this.updateUI();
+      this.feedbackEl.textContent = "Correct!";
+      this.feedbackEl.style.color = "#a6e3a1";
 
-    // Reward in Free Fall too
-    Player.gainXP(10);
-    UI.updateXP();
-    UI.updateLevel();
+      Player.gainXP(10);
+      UI.updateXP();
+      UI.updateLevel();
 
-    this.generateQuestion();
-  } else {
-    this.feedbackEl.textContent = `Wrong. Answer: ${correct}`;
-    this.feedbackEl.style.color = "#f38ba8";
+      this.generateQuestion();
+    } else {
+      this.feedbackEl.textContent = `Wrong. Answer: ${correct}`;
+      this.feedbackEl.style.color = "#f38ba8";
 
-    // Punish in Free Fall
-    Player.takeDamage(10);
-    UI.updateHP();
+      Player.takeDamage(10);
+      UI.updateHP();
 
-    setTimeout(() => this.generateQuestion(), 800);
+      setTimeout(() => this.generateQuestion(), 800);
+    }
   }
-}
 };
 
 FreeFall.init();
