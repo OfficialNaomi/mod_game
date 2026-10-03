@@ -9,30 +9,56 @@ function createFlight(modulus, stepCount, stepFactory) {
   FLIGHTS.push({ modulus, steps });
 }
 
-// ---------- Reward helper ----------
-const REWARD_POOL = [
-  "wooden_sword",
-  "leather_armor",
-  "small_potion",
-  "iron_sword",
-  "lucky_ring",
-  "chainmail",
-  "big_potion",
-  "steel_sword",
-  "scholar_amulet",
-  "plate_armor",
-  "flame_blade",
-  "dragon_scale",
-  "time_pendant",
-  "mod_master_blade",
+// ---------- Tiered Reward Pools ----------
+// Each tier corresponds to a stage of the descent.
+// When a reward step is reached, we pick a random item from the current tier.
+
+const REWARD_TIERS = [
+  // Tier 1: flights 1-5
+  {
+    maxMod: 5,
+    items: ["wooden_sword", "leather_armor", "small_potion"],
+  },
+  // Tier 2: flights 6-10
+  {
+    maxMod: 10,
+    items: ["iron_sword", "chainmail", "small_potion", "lucky_ring"],
+  },
+  // Tier 3: flights 11-20
+  {
+    maxMod: 20,
+    items: ["steel_sword", "plate_armor", "big_potion", "scholar_amulet"],
+  },
+  // Tier 4: flights 21-40
+  {
+    maxMod: 40,
+    items: ["flame_blade", "dragon_scale", "big_potion", "time_pendant"],
+  },
+  // Tier 5: flights 41+
+  {
+    maxMod: Infinity,
+    items: ["mod_master_blade", "dragon_scale", "big_potion", "time_pendant"],
+  },
 ];
 
-let rewardIndex = 0;
+function getTierForMod(mod) {
+  for (const tier of REWARD_TIERS) {
+    if (mod <= tier.maxMod) return tier;
+  }
+  return REWARD_TIERS[REWARD_TIERS.length - 1];
+}
 
-function attachReward(step, i) {
+function pickRewardForMod(mod, stepIndex) {
+  // Guarantee the very first drop is a wooden sword
+  if (mod === 1 && stepIndex === 4) return "wooden_sword";
+
+  const tier = getTierForMod(mod);
+  return tier.items[Math.floor(Math.random() * tier.items.length)];
+}
+
+function attachReward(step, i, mod) {
   if ((i + 1) % 5 === 0) {
-    step.reward = REWARD_POOL[rewardIndex % REWARD_POOL.length];
-    rewardIndex++;
+    step.reward = pickRewardForMod(mod, i);
   }
   return step;
 }
@@ -59,7 +85,7 @@ createFlight(1, 5, (i) => {
     default:
       step = { operation: "simple", label: `Step ${i+1}`, description: "Simple" };
   }
-  return attachReward(step, i);
+  return attachReward(step, i, 1);
 });
 
 // ---------- Mod 2: 10 steps ----------
@@ -78,7 +104,7 @@ const mod2StepDefs = [
 
 createFlight(2, 10, (i) => {
   const step = { ...mod2StepDefs[i], description: mod2StepDefs[i].label };
-  return attachReward(step, i);
+  return attachReward(step, i, 2);
 });
 
 // ---------- Progressive flight generator for mods 3+ ----------
@@ -124,7 +150,7 @@ function createProgressiveFlight(modulus, stepCount = 15) {
       range,
     };
 
-    return attachReward(step, i);
+    return attachReward(step, i, modulus);
   });
 }
 
@@ -175,7 +201,7 @@ function createBonusFlight(modulus) {
       range,
     };
 
-    return attachReward(step, i);
+    return attachReward(step, i, modulus);
   });
 }
 
