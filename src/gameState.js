@@ -10,7 +10,6 @@ const Player = {
   attack: 0,
   defense: 0,
 
-  // Active elemental wards (last one boss fight)
   wards: {
     fire: false,
     ice: false,
@@ -21,14 +20,11 @@ const Player = {
   takeDamage(amount = 10, element = null) {
     let final = amount;
 
-    // Apply ward resistance (halves elemental damage)
     if (element && this.wards[element]) {
       final = Math.floor(final / 2);
     }
 
-    // Then reduce by defense
     final = Math.max(1, final - this.defense);
-
     this.hp = Math.max(0, this.hp - final);
 
     if (this.hp <= 0) {

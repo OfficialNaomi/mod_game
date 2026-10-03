@@ -1,6 +1,6 @@
 // ---------- Boss Definitions ----------
-// modRange: which mods the boss draws questions from.
-// These should be mods the player has already learned.
+// Each boss draws questions from mods the player has already played.
+// Element, weakness, and mechanic fields are used for personality and Step B.
 
 const BOSSES = {
   5: {
@@ -11,6 +11,8 @@ const BOSSES = {
     reward: "iron_sword",
     intro: "A wobbly slime blocks your path.",
     modRange: [1, 2, 3, 4, 5],
+    element: null,
+    mechanic: "split",
   },
   10: {
     name: "Goblin Scout",
@@ -20,6 +22,8 @@ const BOSSES = {
     reward: "chainmail",
     intro: "A sneaky goblin leaps out!",
     modRange: [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    element: null,
+    mechanic: "steal",
   },
   15: {
     name: "Dire Wolf",
@@ -29,6 +33,8 @@ const BOSSES = {
     reward: "steel_sword",
     intro: "A snarling wolf bares its teeth.",
     modRange: [3, 5, 7, 10, 12, 15],
+    element: "fire",
+    mechanic: "doubleAttack",
   },
   20: {
     name: "Bandit Chief",
@@ -38,6 +44,8 @@ const BOSSES = {
     reward: "plate_armor",
     intro: "The bandit chief draws his blade.",
     modRange: [5, 8, 10, 12, 15, 20],
+    element: null,
+    mechanic: "targetStrong",
   },
   25: {
     name: "Cave Ogre",
@@ -47,6 +55,8 @@ const BOSSES = {
     reward: "flame_blade",
     intro: "A massive ogre roars!",
     modRange: [7, 10, 12, 15, 20, 24, 25],
+    element: null,
+    mechanic: "slamEveryThird",
   },
   30: {
     name: "Stone Troll",
@@ -56,6 +66,8 @@ const BOSSES = {
     reward: "dragon_scale",
     intro: "A troll made of stone wakes up.",
     modRange: [7, 10, 12, 15, 20, 24, 30],
+    element: "fire",
+    mechanic: "regenOnCorrect",
   },
   35: {
     name: "Shadow Wraith",
@@ -65,6 +77,8 @@ const BOSSES = {
     reward: "time_pendant",
     intro: "A chilling wraith materializes.",
     modRange: [7, 12, 15, 20, 24, 30, 35],
+    element: "ice",
+    mechanic: "evasive",
   },
   40: {
     name: "Young Dragon",
@@ -74,6 +88,8 @@ const BOSSES = {
     reward: "mod_master_blade",
     intro: "A dragon spreads its wings!",
     modRange: [10, 12, 15, 20, 24, 30, 40],
+    element: "fire",
+    mechanic: "elementalHit",
   },
   45: {
     name: "Lich",
@@ -83,6 +99,8 @@ const BOSSES = {
     reward: "small_potion",
     intro: "An undead sorcerer whispers.",
     modRange: [10, 12, 15, 24, 30, 40, 45],
+    element: "poison",
+    mechanic: "drain",
   },
   50: {
     name: "Demon Lord",
@@ -92,15 +110,19 @@ const BOSSES = {
     reward: "big_potion",
     intro: "The ground trembles as a demon appears.",
     modRange: [12, 15, 20, 24, 30, 40, 50],
+    element: "multi",
+    mechanic: "rotateElement",
   },
   55: {
     name: "Titan",
     art: "⚡",
-    maxHp: 240,
+    maxHp: 300,
     attack: 28,
     reward: "lucky_ring",
     intro: "A titan's footsteps shake the earth.",
     modRange: [12, 15, 24, 30, 40, 50, 55],
+    element: null,
+    mechanic: "slowAttacker",
   },
   60: {
     name: "The Ancient One",
@@ -110,6 +132,8 @@ const BOSSES = {
     reward: "scholar_amulet",
     intro: "An ancient being opens its eye.",
     modRange: [15, 24, 30, 40, 50, 60],
+    element: "ice",
+    mechanic: "shuffleStats",
   },
   final: {
     name: "The Mod Devourer",
@@ -119,5 +143,7 @@ const BOSSES = {
     reward: "mod_master_blade",
     intro: "The source of all remainders awaits.",
     modRange: [12, 24, 30, 60, 100, 360, 365, 1000, 1024],
+    element: "multi",
+    mechanic: "final",
   },
 };
