@@ -45,52 +45,78 @@ const UI = {
     if (!this.inventoryEl) return;
     this.inventoryEl.innerHTML = "";
 
-    const slots = [
-      { key: "weapon",    label: "Weapon" },
-      { key: "armor",     label: "Armor" },
-      { key: "accessory", label: "Accessory" },
+    // --- Equipped slots ---
+    this.renderSection("Equipped", () => {
+      const slots = [
+        { key: "weapon",    label: "Weapon" },
+        { key: "armor",     label: "Armor" },
+        { key: "accessory", label: "Accessory" },
+      ];
+
+      slots.forEach(({ key, label }) => {
+        const itemId = Inventory.equipped[key];
+        const div = document.createElement("div");
+        div.classList.add("equip-slot");
+
+        if (itemId) {
+          const item = ITEMS[itemId];
+          div.classList.add("filled");
+          div.innerHTML = `
+            <span class="slot-label">${label}</span>
+            <span class="item-name">${item.icon} ${item.name}</span>
+          `;
+          div.addEventListener("click", () => Inventory.unequip(key));
+          div.title = "Click to unequip";
+        } else {
+          div.classList.add("empty");
+          div.innerHTML = `<span class="slot-label">${label}</span><span class="item-name">— empty —</span>`;
+        }
+
+        this.inventoryEl.appendChild(div);
+      });
+    });
+
+    // --- Group unequipped items by type ---
+    const groups = [
+      { type: "weapon",      label: "Weapons" },
+      { type: "armor",       label: "Armor" },
+      { type: "accessory",   label: "Accessories" },
+      { type: "consumable",  label: "Potions" },
     ];
 
-    slots.forEach(({ key, label }) => {
-      const itemId = Inventory.equipped[key];
-      const div = document.createElement("div");
-      div.classList.add("equip-slot");
+    groups.forEach(({ type, label }) => {
+      const matching = Inventory.items.filter((id) => ITEMS[id] && ITEMS[id].type === type);
+      if (matching.length === 0) return;
 
-      if (itemId) {
-        const item = ITEMS[itemId];
-        div.classList.add("filled");
-        div.innerHTML = `
-          <span class="slot-label">${label}</span>
-          <span class="item-name">${item.icon} ${item.name}</span>
-        `;
-        div.addEventListener("click", () => Inventory.unequip(key));
-        div.title = "Click to unequip";
-      } else {
-        div.classList.add("empty");
-        div.innerHTML = `<span class="slot-label">${label}</span><span class="item-name">— empty —</span>`;
-      }
+      this.renderSection(label, () => {
+        matching.forEach((itemId) => {
+          const item = ITEMS[itemId];
+          const div = document.createElement("div");
+          div.classList.add("inventory-item", item.type);
+          div.innerHTML = `${item.icon} ${item.name}`;
 
-      this.inventoryEl.appendChild(div);
+          if (item.type === "consumable") {
+            div.addEventListener("click", () => Inventory.use(itemId));
+            div.title = "Click to use";
+          } else {
+            div.addEventListener("click", () => Inventory.equip(itemId));
+            div.title = "Click to equip";
+          }
+
+          this.inventoryEl.appendChild(div);
+        });
+      });
     });
+  },
 
-    Inventory.items.forEach((itemId) => {
-      const item = ITEMS[itemId];
-      if (!item) return;
+  // Helper to insert a labeled section into the inventory list
+  renderSection(title, buildFn) {
+    const heading = document.createElement("div");
+    heading.classList.add("inventory-section-heading");
+    heading.textContent = title;
+    this.inventoryEl.appendChild(heading);
 
-      const div = document.createElement("div");
-      div.classList.add("inventory-item", item.type);
-      div.innerHTML = `${item.icon} ${item.name}`;
-
-      if (item.type === "consumable") {
-        div.addEventListener("click", () => Inventory.use(itemId));
-        div.title = "Click to use";
-      } else {
-        div.addEventListener("click", () => Inventory.equip(itemId));
-        div.title = "Click to equip";
-      }
-
-      this.inventoryEl.appendChild(div);
-    });
+    buildFn();
   }
 };
 

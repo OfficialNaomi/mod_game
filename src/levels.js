@@ -10,9 +10,6 @@ function createFlight(modulus, stepCount, stepFactory) {
 }
 
 // ---------- Tiered Reward Pools ----------
-// Each tier corresponds to a stage of the descent.
-// The actual item is picked at drop time so duplicates can be filtered.
-
 const REWARD_TIERS = [
   // Tier 1: flights 1-5
   {
@@ -22,22 +19,28 @@ const REWARD_TIERS = [
   // Tier 2: flights 6-10
   {
     maxMod: 10,
-    items: ["iron_sword", "chainmail", "small_potion", "lucky_ring"],
+    items: ["iron_sword", "chainmail", "small_potion", "xp_vial", "lucky_ring"],
   },
   // Tier 3: flights 11-20
   {
     maxMod: 20,
-    items: ["steel_sword", "plate_armor", "big_potion", "scholar_amulet"],
+    items: ["steel_sword", "plate_armor", "big_potion", "xp_vial", "xp_tome", "scholar_amulet"],
   },
   // Tier 4: flights 21-40
   {
     maxMod: 40,
-    items: ["flame_blade", "dragon_scale", "big_potion", "time_pendant"],
+    items: [
+      "flame_blade", "dragon_scale", "big_potion", "xp_tome", "time_pendant",
+      "fire_ward", "ice_ward", "poison_ward", "thunder_ward",
+    ],
   },
   // Tier 5: flights 41+
   {
     maxMod: Infinity,
-    items: ["mod_master_blade", "dragon_scale", "big_potion", "time_pendant"],
+    items: [
+      "mod_master_blade", "dragon_scale", "big_potion", "xp_tome", "time_pendant",
+      "fire_ward", "ice_ward", "poison_ward", "thunder_ward",
+    ],
   },
 ];
 
@@ -50,7 +53,6 @@ function getTierForMod(mod) {
 
 function attachReward(step, i, mod) {
   if ((i + 1) % 5 === 0) {
-    // Guarantee the very first drop is a wooden sword
     if (mod === 1 && i === 4) {
       step.reward = "wooden_sword";
     } else {
