@@ -44,7 +44,7 @@ header h1 {
 
 /* ========== Character Panel ========== */
 #character-panel {
-  flex: 0 0 180px;
+  flex: 0 0 200px;
   background: #181825;
   border: 1px solid #313244;
   border-radius: 16px;
@@ -148,6 +148,18 @@ header h1 {
   gap: 0.35rem;
 }
 
+.inventory-section-heading {
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #6c7086;
+  text-align: left;
+  border-bottom: 1px solid #313244;
+  padding-bottom: 0.15rem;
+}
+
 .equip-slot {
   display: flex;
   justify-content: space-between;
@@ -198,6 +210,12 @@ header h1 {
 
 .inventory-item.consumable {
   border-color: #a6e3a1;
+}
+
+.item-count {
+  float: right;
+  color: #a6e3a1;
+  font-weight: bold;
 }
 
 /* ========== Game Area ========== */
@@ -627,16 +645,4 @@ footer {
   margin-top: 1.5rem;
   color: #6c7086;
   font-size: 0.9rem;
-}
-
-.inventory-section-heading {
-  margin-top: 0.5rem;
-  margin-bottom: 0.25rem;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #6c7086;
-  text-align: left;
-  border-bottom: 1px solid #313244;
-  padding-bottom: 0.15rem;
 }

@@ -78,10 +78,10 @@ const UI = {
 
     // --- Group unequipped items by type ---
     const groups = [
-      { type: "weapon",      label: "Weapons" },
-      { type: "armor",       label: "Armor" },
-      { type: "accessory",   label: "Accessories" },
-      { type: "consumable",  label: "Potions" },
+      { type: "weapon",     label: "Weapons" },
+      { type: "armor",      label: "Armor" },
+      { type: "accessory",  label: "Accessories" },
+      { type: "consumable", label: "Potions" },
     ];
 
     groups.forEach(({ type, label }) => {
@@ -89,22 +89,37 @@ const UI = {
       if (matching.length === 0) return;
 
       this.renderSection(label, () => {
-        matching.forEach((itemId) => {
-          const item = ITEMS[itemId];
-          const div = document.createElement("div");
-          div.classList.add("inventory-item", item.type);
-          div.innerHTML = `${item.icon} ${item.name}`;
+        if (type === "consumable") {
+          // Group consumables by itemId and show a count
+          const counts = {};
+          matching.forEach((id) => {
+            counts[id] = (counts[id] || 0) + 1;
+          });
 
-          if (item.type === "consumable") {
+          Object.keys(counts).forEach((itemId) => {
+            const item = ITEMS[itemId];
+            const count = counts[itemId];
+
+            const div = document.createElement("div");
+            div.classList.add("inventory-item", item.type);
+            div.innerHTML = `${item.icon} ${item.name} <span class="item-count">×${count}</span>`;
             div.addEventListener("click", () => Inventory.use(itemId));
-            div.title = "Click to use";
-          } else {
+            div.title = "Click to use one";
+
+            this.inventoryEl.appendChild(div);
+          });
+        } else {
+          // Weapons, armor, accessories — no grouping needed
+          matching.forEach((itemId) => {
+            const item = ITEMS[itemId];
+            const div = document.createElement("div");
+            div.classList.add("inventory-item", item.type);
+            div.innerHTML = `${item.icon} ${item.name}`;
             div.addEventListener("click", () => Inventory.equip(itemId));
             div.title = "Click to equip";
-          }
-
-          this.inventoryEl.appendChild(div);
-        });
+            this.inventoryEl.appendChild(div);
+          });
+        }
       });
     });
   },
